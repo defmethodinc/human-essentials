@@ -200,6 +200,7 @@ group :test do
   gem "rails-controller-testing"
   # Show code coverage.
   gem 'simplecov'
+  gem 'simplecov-json'
   # Mock HTTP requests and ensure they are not called during tests.
   gem "webmock", "~> 3.24"
   # Interface capybara to chrome headless

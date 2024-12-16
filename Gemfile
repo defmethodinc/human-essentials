@@ -196,6 +196,7 @@ group :test do
   gem "rails-controller-testing"
   # Show code coverage.
   gem 'simplecov'
+  gem 'simplecov-json'
   # More concise test ("should") matchers
   gem 'shoulda-matchers', '~> 6.2'
   # Mock HTTP requests and ensure they are not called during tests.

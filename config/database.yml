@@ -22,7 +22,7 @@ staging:
 
 test:
   <<: *default
-  database: diaper_test
+  database: diaper_test<%= ENV['TEST_ENV_NUMBER'] %>
   timeout: 5000
 
 # These env vars live in Cloud66 application settings. Don't change

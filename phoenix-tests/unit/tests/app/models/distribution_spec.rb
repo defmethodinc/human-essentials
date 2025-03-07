@@ -299,7 +299,8 @@ RSpec.describe Distribution do
       expect(future_distribution.future?).to eq(true)
     end
 
-    xit 'returns false when issued_at is today' do
+    it 'returns false when issued_at is today' do
+      pending('This test is failing because #future? should be using Time.zone.now instead of Time.zone.today')
       expect(today_distribution.future?).to eq(false)
     end
 

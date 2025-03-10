@@ -8,17 +8,17 @@ RSpec.describe Partner do
     let(:partner_other_status) { build(:partner, :deactivated) }
 
     it 'returns Submitted when status is :awaiting_review' do
-      pending('This test is failing because of a bug in the Partner model.')
+      pending "Fails because `status` is an enum which returns a string, but the method checks for a symbol."
       expect(partner_awaiting_review.display_status).to eq('Submitted')
     end
 
     it 'returns Pending when status is :uninvited' do
-      pending('This test is failing because of a bug in the Partner model.')
+      pending "Fails because `status` is an enum which returns a string, but the method checks for a symbol."
       expect(partner_uninvited.display_status).to eq('Pending')
     end
 
     it 'returns Verified when status is :approved' do
-      pending('This test is failing because of a bug in the Partner model.')
+      pending "Fails because `status` is an enum which returns a string, but the method checks for a symbol."
       expect(partner_approved.display_status).to eq('Verified')
     end
 

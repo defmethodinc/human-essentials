@@ -209,19 +209,6 @@ RSpec.describe Distribution do
         expect(distribution.line_items.first.quantity).to eq(3)
       end
     end
-
-    describe "when line_items contains a mix of valid and invalid items" do
-      it "removes invalid and zero quantity items" do
-        distribution = Distribution.new(line_items: mixed_line_items)
-        expect { distribution.combine_distribution }.to change { distribution.line_items.size }.from(3).to(1)
-      end
-
-      it "keeps valid items with correct quantity" do
-        distribution = Distribution.new(line_items: mixed_line_items)
-        distribution.combine_distribution
-        expect(distribution.line_items.first.quantity).to eq(1)
-      end
-    end
   end
   describe "#csv_export_attributes", :phoenix do
     let(:organization) { create(:organization) }

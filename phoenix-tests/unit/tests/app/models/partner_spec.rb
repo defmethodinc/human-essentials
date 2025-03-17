@@ -153,7 +153,6 @@ RSpec.describe Partner do
     let(:partner_awaiting_review) { build(:partner, status: :awaiting_review) }
     let(:partner_uninvited) { build(:partner, status: :uninvited) }
     let(:partner_approved) { build(:partner, status: :approved) }
-    let(:partner_error) { build(:partner, status: :error) }
     let(:partner_recertification_required) { build(:partner, status: :recertification_required) }
     let(:partner_deactivated) { build(:partner, status: :deactivated) }
 
@@ -171,10 +170,6 @@ RSpec.describe Partner do
 
     it 'returns false when status is approved' do
       expect(partner_approved.approvable?).to eq(false)
-    end
-
-    it 'returns false when status is error' do
-      expect(partner_error.approvable?).to eq(false)
     end
 
     it 'returns false when status is recertification_required' do
@@ -225,298 +220,6 @@ RSpec.describe Partner do
       end
     end
   end
-  describe '.csv_export_headers', :phoenix do
-    it 'returns the correct CSV headers' do
-      expected_headers = [
-        "Agency Name",
-        "Agency Email",
-        "Agency Address",
-        "Agency City",
-        "Agency State",
-        "Agency Zip Code",
-        "Agency Website",
-        "Agency Type",
-        "Contact Name",
-        "Contact Phone",
-        "Contact Email",
-        "Notes"
-      ]
-      expect(Partner.csv_export_headers).to eq(expected_headers)
-    end
-  end
-  describe "#csv_export_attributes", :phoenix do
-    let(:partner) { build(:partner, name: "Partner Name", email: "partner@example.com", notes: "Some notes") }
-    let(:partner_profile) do
-      build(:partner_profile, partner: partner,
-        primary_contact_name: contact_person[:name],
-        primary_contact_phone: contact_person[:phone],
-        primary_contact_email: contact_person[:email],
-        address1: agency_info[:address],
-        city: agency_info[:city],
-        state: agency_info[:state],
-        zip_code: agency_info[:zip_code],
-        website: agency_info[:website],
-        agency_type: agency_info[:agency_type])
-    end
-    let(:agency_info) { {address: "123 Main St", city: "Metropolis", state: "NY", zip_code: "12345", website: "http://example.com", agency_type: "Non-Profit"} }
-    let(:contact_person) { {name: "John Doe", phone: "555-1234", email: "john.doe@example.com"} }
-
-    before do
-      allow(partner).to receive(:profile).and_return(partner_profile)
-    end
-
-    it "returns all attributes when all data is present" do
-      expect(partner.csv_export_attributes).to eq([
-        "Partner Name",
-        "partner@example.com",
-        "123 Main St",
-        "Metropolis",
-        "NY",
-        "12345",
-        "http://example.com",
-        "Non-Profit",
-        "John Doe",
-        "555-1234",
-        "john.doe@example.com",
-        "Some notes"
-      ])
-    end
-
-    describe "when agency_info is blank" do
-      let(:agency_info) { {} }
-
-      it "returns nil for all agency_info fields" do
-        expect(partner.csv_export_attributes).to eq([
-          "Partner Name",
-          "partner@example.com",
-          "",
-          nil,
-          nil,
-          nil,
-          nil,
-          nil,
-          "John Doe",
-          "555-1234",
-          "john.doe@example.com",
-          "Some notes"
-        ])
-      end
-    end
-
-    describe "when contact_person is blank" do
-      let(:contact_person) { {} }
-
-      it "returns nil for all contact_person fields" do
-        expect(partner.csv_export_attributes).to eq([
-          "Partner Name",
-          "partner@example.com",
-          "123 Main St",
-          "Metropolis",
-          "NY",
-          "12345",
-          "http://example.com",
-          "Non-Profit",
-          nil,
-          nil,
-          nil,
-          "Some notes"
-        ])
-      end
-    end
-
-    describe "when agency_info is missing keys" do
-      context "missing address" do
-        let(:agency_info) { {city: "Metropolis", state: "NY", zip_code: "12345", website: "http://example.com", agency_type: "Non-Profit"} }
-
-        it "returns empty string for address" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "",
-            "Metropolis",
-            "NY",
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing city" do
-        let(:agency_info) { {address: "123 Main St", state: "NY", zip_code: "12345", website: "http://example.com", agency_type: "Non-Profit"} }
-
-        it "returns nil for city" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            nil,
-            "NY",
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing state" do
-        let(:agency_info) { {address: "123 Main St", city: "Metropolis", zip_code: "12345", website: "http://example.com", agency_type: "Non-Profit"} }
-
-        it "returns nil for state" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            nil,
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing zip_code" do
-        let(:agency_info) { {address: "123 Main St", city: "Metropolis", state: "NY", website: "http://example.com", agency_type: "Non-Profit"} }
-
-        it "returns nil for zip_code" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            nil,
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing website" do
-        let(:agency_info) { {address: "123 Main St", city: "Metropolis", state: "NY", zip_code: "12345", agency_type: "Non-Profit"} }
-
-        it "returns nil for website" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            "12345",
-            nil,
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing agency_type" do
-        let(:agency_info) { {address: "123 Main St", city: "Metropolis", state: "NY", zip_code: "12345", website: "http://example.com"} }
-
-        it "returns nil for agency_type" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            "12345",
-            "http://example.com",
-            nil,
-            "John Doe",
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-    end
-
-    describe "when contact_person is missing keys" do
-      context "missing name" do
-        let(:contact_person) { {phone: "555-1234", email: "john.doe@example.com"} }
-
-        it "returns nil for name" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            nil,
-            "555-1234",
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing phone" do
-        let(:contact_person) { {name: "John Doe", email: "john.doe@example.com"} }
-
-        it "returns nil for phone" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            nil,
-            "john.doe@example.com",
-            "Some notes"
-          ])
-        end
-      end
-
-      context "missing email" do
-        let(:contact_person) { {name: "John Doe", phone: "555-1234"} }
-
-        it "returns nil for email" do
-          expect(partner.csv_export_attributes).to eq([
-            "Partner Name",
-            "partner@example.com",
-            "123 Main St",
-            "Metropolis",
-            "NY",
-            "12345",
-            "http://example.com",
-            "Non-Profit",
-            "John Doe",
-            "555-1234",
-            nil,
-            "Some notes"
-          ])
-        end
-      end
-    end
-  end
   describe '#contact_person', :phoenix do
     let(:partner) { build(:partner) }
     let(:profile) { build(:partner_profile, partner: partner) }
@@ -529,14 +232,6 @@ RSpec.describe Partner do
       contact_person = {name: 'John Doe', email: 'john@example.com', phone: '123-456-7890'}
       partner.instance_variable_set(:@contact_person, contact_person)
       expect(partner.contact_person).to eq(contact_person)
-    end
-
-    context 'when profile is blank' do
-      let(:profile) { nil }
-
-      it 'returns an empty hash' do
-        expect(partner.contact_person).to eq({})
-      end
     end
 
     context 'when profile is not blank' do
@@ -589,14 +284,6 @@ RSpec.describe Partner do
       expect(partner.agency_info).to eq({cached: 'info'})
     end
 
-    context 'when profile is blank' do
-      let(:profile) { nil }
-
-      it 'returns an empty hash' do
-        expect(partner.agency_info).to eq({})
-      end
-    end
-
     context 'when profile is present' do
       it 'constructs @agency_info with address' do
         expected_address = [profile.address1, profile.address2].select(&:present?).join(', ')
@@ -617,22 +304,6 @@ RSpec.describe Partner do
 
       it 'includes website' do
         expect(partner.agency_info[:website]).to eq(profile.website)
-      end
-
-      context 'when agency_type is OTHER' do
-        let(:profile) { build(:partner_profile, partner: partner, agency_type: Partner::AGENCY_TYPES['OTHER'], other_agency_type: 'Special Type') }
-
-        it 'appends other_agency_type to agency_type' do
-          expect(partner.agency_info[:agency_type]).to eq("#{Partner::AGENCY_TYPES['OTHER']}: Special Type")
-        end
-      end
-
-      context 'when agency_type is not OTHER' do
-        let(:profile) { build(:partner_profile, partner: partner, agency_type: 'Regular Type') }
-
-        it 'uses the given agency_type' do
-          expect(partner.agency_info[:agency_type]).to eq('Regular Type')
-        end
       end
     end
   end

@@ -1,0 +1,221 @@
+
+Randomized with seed 58290
+
+Partner
+  #import_csv
+    when CSV is valid
+      successfully imports a row
+    when organization is not found
+      raises an ActiveRecord::RecordNotFound error
+    when CSV contains invalid data
+      returns validation errors
+    when CSV is empty
+      does not create any partners
+  #agency_info
+    returns cached @agency_info if already set
+    when profile is present
+      includes state
+      constructs @agency_info with address
+      includes zip code
+      includes city
+      includes website
+  #quota_exceeded?
+    returns false when quota is not present
+    when quota is present
+      returns false when total is less than quota
+      returns false when total is equal to quota
+      returns true when total is greater than quota
+  #impact_metrics
+    returns the correct family_zipcodes list
+    returns the correct families_served count
+    returns the correct children_served count
+    returns a hash with the correct keys
+    returns the correct family_zipcodes count
+    when family_zipcodes_count returns an unexpected value
+      handles the unexpected value gracefully
+    when family_zipcodes_list returns an unexpected value
+      handles the unexpected value gracefully
+    when children_served_count returns an unexpected value
+      handles the unexpected value gracefully
+    when families_served_count returns an unexpected value
+      handles the unexpected value gracefully
+  #quantity_year_to_date
+    returns zero when all distributions with line items are issued before the beginning of the year
+    calculates the sum of quantities for distributions issued from the beginning of the year
+    returns zero when there are no distributions issued from the beginning of the year
+    includes distributions issued exactly at the beginning of the year
+    returns zero when there are distributions but none with line items
+  #primary_user
+    when users have the same creation date
+      returns one of the users
+    when there are no users
+      returns nil
+    when there is only one user
+      returns the user
+    when there are multiple users
+      returns the earliest created user
+  #approvable?
+    returns false when status is deactivated
+    returns false when status is uninvited
+    returns true when status is invited
+    returns false when status is recertification_required
+    returns false when status is approved
+    returns true when status is awaiting_review
+  #deletable?
+    returns true when uninvited and has no distributions, requests, or users
+    when uninvited? and distributions are present
+      returns false
+    when users and distributions are present
+      returns false
+    when requests are present
+      returns false
+    when uninvited? is false
+      returns false
+    when distributions are present
+      returns false
+    when users are present
+      returns false
+    when requests and users are present
+      returns false
+    when distributions and requests are present
+      returns false
+  #display_status
+    returns Pending when status is :uninvited (PENDING: Fails because `status` is an enum which returns a string, but the method checks for a symbol.)
+    returns Submitted when status is :awaiting_review (PENDING: Fails because `status` is an enum which returns a string, but the method checks for a symbol.)
+    returns Verified when status is :approved (PENDING: Fails because `status` is an enum which returns a string, but the method checks for a symbol.)
+    returns titleized status for any other status
+  #partials_to_show
+    when partner_form_fields are not present
+      returns ALL_PARTIALS
+    when partner_form_fields are present
+      returns partner_form_fields
+  #contact_person
+    returns @contact_person if already set
+    when profile is not blank
+      returns a hash with name, email, and phone
+      when primary_contact_phone is not present
+        sets phone to primary_contact_mobile
+      when primary_contact_phone is present
+        sets phone to primary_contact_phone
+
+Distribution
+  #past?
+    returns false if issued_at is today
+    returns false if issued_at is after today
+    returns true if issued_at is before today
+  #combine_distribution
+    does nothing when line_items is empty
+    does nothing when line_items contains only invalid items
+    does nothing when line_items contains items with zero quantity
+    when line_items contains duplicate items
+      combines duplicate line_items with the same item_id
+      updates the quantity of combined line_items
+    when line_items contains valid items
+      combines line_items with valid items and non-zero quantity
+  #copy_line_items
+    when an error occurs during line item creation
+      does not change the line items count
+    when there is a single line item
+      copies the attributes of the line item
+      increases the line items count by 1
+    when there are no line items
+      does not change the line items count
+    when there are multiple line items
+      copies the attributes of each line item
+      increases the line items count by the number of line items
+  #csv_export_attributes
+    returns correct attributes when all values are present
+    when state is nil
+      handles missing state
+    when delivery_method is nil
+      handles missing delivery method
+    when total_quantity is zero
+      handles zero total quantity
+    when agency_rep is nil
+      handles missing agency representative
+    when line_items total_value is zero
+      handles zero total value
+  #distributed_at
+    when issued_at is midnight
+      returns the distribution date format
+    when issued_at is not midnight
+      returns the distribution date time format
+  #combine_duplicates
+    when there are line items with zero quantities
+      removes line items with zero quantities
+    when there are line items with the same item_id
+      aggregates quantities for line items with the same item_id
+    when there are no line items
+      does not change the line items size
+    when there are invalid line items
+      does not change the line items size
+  #future?
+    returns false when issued_at is today (PENDING: This test is failing because #future? should be using Time.zone.now instead of Time.zone.today)
+    returns true when issued_at is in the future
+    returns false when issued_at is in the past
+  #copy_from_donation
+    when donation_id is not provided and storage_location_id is not provided
+      dos not change storage location
+      does not copy line items
+    when donation_id is provided and storage_location_id is provided
+      copies line items from donation
+      sets storage location to the provided storage_location_id
+    when donation_id is provided and storage_location_id is not provided
+      has original storage location
+      copies line items from donation
+    when donation_id is not provided and storage_location_id is provided
+      does not copy line items
+      dos not change storage_location
+
+Pending: (Failures listed here are expected and do not affect your suite's status)
+
+  1) Partner#display_status returns Pending when status is :uninvited
+     # Fails because `status` is an enum which returns a string, but the method checks for a symbol.
+     Failure/Error: expect(partner_uninvited.display_status).to eq('Pending')
+
+       expected: #<Encoding:UTF-8> "Pending"
+            got: #<Encoding:US-ASCII> "Uninvited"
+
+       (compared using ==)
+     # ./phoenix-tests/unit/tests/app/models/partner_spec.rb:17:in `block (3 levels) in <top (required)>'
+
+  2) Partner#display_status returns Submitted when status is :awaiting_review
+     # Fails because `status` is an enum which returns a string, but the method checks for a symbol.
+     Failure/Error: expect(partner_awaiting_review.display_status).to eq('Submitted')
+
+       expected: #<Encoding:UTF-8> "Submitted"
+            got: #<Encoding:US-ASCII> "Awaiting Review"
+
+       (compared using ==)
+     # ./phoenix-tests/unit/tests/app/models/partner_spec.rb:12:in `block (3 levels) in <top (required)>'
+
+  3) Partner#display_status returns Verified when status is :approved
+     # Fails because `status` is an enum which returns a string, but the method checks for a symbol.
+     Failure/Error: expect(partner_approved.display_status).to eq('Verified')
+
+       expected: #<Encoding:UTF-8> "Verified"
+            got: #<Encoding:US-ASCII> "Approved"
+
+       (compared using ==)
+     # ./phoenix-tests/unit/tests/app/models/partner_spec.rb:22:in `block (3 levels) in <top (required)>'
+
+  4) Distribution#future? returns false when issued_at is today
+     # This test is failing because #future? should be using Time.zone.now instead of Time.zone.today
+     Failure/Error: expect(today_distribution.future?).to eq(false)
+
+       expected: false
+            got: true
+
+       (compared using ==)
+
+       Diff:
+       @@ -1 +1 @@
+       -false
+       +true
+     # ./phoenix-tests/unit/tests/app/models/distribution_spec.rb:291:in `block (3 levels) in <top (required)>'
+
+Finished in 2.09 seconds (files took 2.5 seconds to load)
+95 examples, 0 failures, 4 pending
+
+Randomized with seed 58290
+
